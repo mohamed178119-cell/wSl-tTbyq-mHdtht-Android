@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface RegisterDeviceRequest {
+  /** @minLength 8 */
+  deviceId: string;
+  /** @maxLength 60 */
+  displayName?: string;
 }

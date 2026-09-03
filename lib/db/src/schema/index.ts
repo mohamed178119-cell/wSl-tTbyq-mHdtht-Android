@@ -1,20 +1,51 @@
-// Export your models here. Add one export per file
-// export * from "./posts";
-//
-// Each model/table should ideally be split into different files.
-// Each model/table should define a Drizzle table, insert schema, and types:
-//
-//   import { pgTable, text, serial } from "drizzle-orm/pg-core";
-//   import { createInsertSchema } from "drizzle-zod";
-//   import { z } from "zod/v4";
-//
-//   export const postsTable = pgTable("posts", {
-//     id: serial("id").primaryKey(),
-//     title: text("title").notNull(),
-//   });
-//
-//   export const insertPostSchema = createInsertSchema(postsTable).omit({ id: true });
-//   export type InsertPost = z.infer<typeof insertPostSchema>;
-//   export type Post = typeof postsTable.$inferSelect;
+import { pgTable, text, boolean, timestamp, primaryKey, unique } from "drizzle-orm/pg-core";
 
-export {}
+export const devices = pgTable("wasla_devices", {
+  id: text("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  displayName: text("display_name").notNull().default("مستخدم جديد"),
+  online: boolean("online").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const conversations = pgTable("wasla_conversations", {
+  id: text("id").primaryKey(),
+  type: text("type").notNull(),
+  name: text("name").notNull(),
+  creatorDeviceId: text("creator_device_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const conversationMembers = pgTable(
+  "wasla_conversation_members",
+  {
+    conversationId: text("conversation_id").notNull(),
+    deviceId: text("device_id").notNull(),
+    decision: text("decision").notNull().default("pending"),
+    joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.conversationId, table.deviceId] }),
+  }),
+);
+
+export const messages = pgTable(
+  "wasla_messages",
+  {
+    id: text("id").primaryKey(),
+    conversationId: text("conversation_id").notNull(),
+    senderDeviceId: text("sender_device_id").notNull(),
+    text: text("text").notNull(),
+    clientId: text("client_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    clientMessage: unique("wasla_messages_client_id").on(table.conversationId, table.clientId),
+  }),
+);
+
+export type Device = typeof devices.$inferSelect;
+export type Conversation = typeof conversations.$inferSelect;
+export type ConversationMember = typeof conversationMembers.$inferSelect;
+export type Message = typeof messages.$inferSelect;

@@ -1,0 +1,1 @@
+- [Expo preview native dependency quirk](expo-devtools-native-lib.md) — optional React Native DevTools may warn about a missing Linux library while Metro and the app still run.

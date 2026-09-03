@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: devices
+    description: Device identity and presence
+  - name: conversations
+    description: Conversation and message operations
 paths:
   /healthz:
     get:
@@ -24,7 +28,178 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /devices/register:
+    post:
+      operationId: registerDevice
+      tags: [devices]
+      summary: Register a device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterDeviceRequest"
+      responses:
+        "200":
+          description: Registered device
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceProfile"
+  /devices/me:
+    get:
+      operationId: getDevice
+      tags: [devices]
+      summary: Get a device profile
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      responses:
+        "200":
+          description: Device profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceProfile"
+    patch:
+      operationId: updateDevicePresence
+      tags: [devices]
+      summary: Update online presence
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PresenceRequest"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceProfile"
+  /conversations:
+    get:
+      operationId: listConversations
+      tags: [conversations]
+      summary: List conversations for a device
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      responses:
+        "200":
+          description: Conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Conversation"
+    post:
+      operationId: createConversationRequest
+      tags: [conversations]
+      summary: Send a conversation request by code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConversationRequest"
+      responses:
+        "201":
+          description: Conversation request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+  /conversations/groups:
+    post:
+      operationId: createGroup
+      tags: [conversations]
+      summary: Create a group
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGroupRequest"
+      responses:
+        "201":
+          description: Created group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+  /conversations/{conversationId}/decision:
+    post:
+      operationId: decideConversation
+      tags: [conversations]
+      summary: Accept or reject a conversation request
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DecisionRequest"
+      responses:
+        "200":
+          description: Updated conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+  /conversations/{conversationId}/messages:
+    get:
+      operationId: listMessages
+      tags: [conversations]
+      summary: List messages
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+        - $ref: "#/components/parameters/DeviceId"
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+    post:
+      operationId: sendMessage
+      tags: [conversations]
+      summary: Send a message
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+      responses:
+        "201":
+          description: Created message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
 components:
+  parameters:
+    DeviceId:
+      name: deviceId
+      in: query
+      required: true
+      schema:
+        type: string
+    ConversationId:
+      name: conversationId
+      in: path
+      required: true
+      schema:
+        type: string
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +208,127 @@ components:
           type: string
       required:
         - status
+    RegisterDeviceRequest:
+      type: object
+      properties:
+        deviceId:
+          type: string
+          minLength: 8
+        displayName:
+          type: string
+          maxLength: 60
+      required: [deviceId]
+    PresenceRequest:
+      type: object
+      properties:
+        online:
+          type: boolean
+      required: [online]
+    DeviceProfile:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        code:
+          type: string
+        displayName:
+          type: string
+        online:
+          type: boolean
+      required: [deviceId, code, displayName, online]
+    ConversationMember:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        code:
+          type: string
+        displayName:
+          type: string
+        decision:
+          type: string
+          enum: [pending, accepted, rejected]
+      required: [deviceId, code, displayName, decision]
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+        conversationId:
+          type: string
+        senderDeviceId:
+          type: string
+        text:
+          type: string
+        createdAt:
+          type: string
+        clientId:
+          type: string
+      required: [id, conversationId, senderDeviceId, text, createdAt, clientId]
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [direct, group]
+        status:
+          type: string
+          enum: [pending_incoming, pending_outgoing, active]
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConversationMember"
+        lastMessage:
+          anyOf:
+            - $ref: "#/components/schemas/Message"
+            - type: "null"
+      required: [id, name, type, status, members, lastMessage]
+    CreateConversationRequest:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        targetCode:
+          type: string
+      required: [deviceId, targetCode]
+    CreateGroupRequest:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        memberCodes:
+          type: array
+          minItems: 2
+          items:
+            type: string
+      required: [deviceId, name, memberCodes]
+    DecisionRequest:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        decision:
+          type: string
+          enum: [accept, reject]
+      required: [deviceId, decision]
+    SendMessageRequest:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        text:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        clientId:
+          type: string
+      required: [deviceId, text, clientId]
 

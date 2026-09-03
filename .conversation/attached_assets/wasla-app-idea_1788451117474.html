@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>وصلة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#0B1220; --bg-panel:#121B2E; --bg-elevated:#1A2540;
+    --accent:#12E0C4; --accent-soft:rgba(18,224,196,.14);
+    --violet:#7C6CF0; --violet-soft:rgba(124,108,240,.16);
+    --danger:#FF6B6B; --danger-soft:rgba(255,107,107,.14);
+    --text-primary:#EAF2F7; --text-muted:#8493AC; --line:rgba(255,255,255,.08);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:
+      radial-gradient(circle at 12% 8%, rgba(18,224,196,.07), transparent 42%),
+      radial-gradient(circle at 90% 92%, rgba(124,108,240,.09), transparent 48%),
+      var(--bg-deep);
+    font-family:'Tajawal', sans-serif; color:var(--text-primary);
+    min-height:100vh; display:flex; flex-direction:column;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 32px; border-bottom:1px solid var(--line);
+    background:rgba(18,32,58,.5); backdrop-filter:blur(8px);
+    position:sticky; top:0; z-index:20;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand .mark{width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg, var(--accent), var(--violet)); flex-shrink:0;}
+  .brand h1{font-family:'Cairo'; font-weight:900; font-size:20px;}
+
+  .status-pill{display:flex; align-items:center; gap:7px; background:var(--bg-elevated); padding:7px 14px; border-radius:20px; font-family:'Cairo'; font-weight:700; font-size:12.5px; cursor:pointer; border:1px solid var(--line);}
+  .status-pill .led{width:7px;height:7px;border-radius:50%;}
+  .status-pill.online .led{background:var(--accent); box-shadow:0 0 8px var(--accent);}
+  .status-pill.offline .led{background:var(--text-muted);}
+  .status-pill.online{color:var(--accent);}
+
+  nav.tabs{display:flex; gap:6px; padding:0 32px; margin-top:14px;}
+  .tab-btn{
+    padding:9px 18px; border-radius:11px; border:1px solid transparent;
+    background:none; color:var(--text-muted); font-family:'Cairo'; font-weight:700; font-size:13.5px; cursor:pointer;
+  }
+  .tab-btn.active{background:var(--bg-elevated); color:var(--text-primary); border-color:var(--line);}
+  .tab-btn.active::after{content:''; display:block; height:2px; width:100%; background:var(--accent); margin-top:8px; border-radius:2px;}
+
+  main{flex:1; padding:26px 32px 40px; max-width:1080px; width:100%; margin:0 auto;}
+  section.view{display:none;}
+  section.view.active{display:block;}
+
+  /* ---------- شاشة: كودي ---------- */
+  .code-view{display:flex; gap:28px; flex-wrap:wrap;}
+  .code-card{
+    flex:1; min-width:280px; background:var(--bg-panel); border:1px solid var(--line);
+    border-radius:22px; padding:32px; text-align:center;
+  }
+  .code-ring{width:180px; height:180px; margin:0 auto 20px; border-radius:50%; background:conic-gradient(var(--accent) 0deg, var(--violet) 200deg, transparent 200deg); display:flex; align-items:center; justify-content:center; position:relative;}
+  .code-ring::after{content:''; position:absolute; inset:8px; background:var(--bg-panel); border-radius:50%;}
+  .code-inner{position:relative; z-index:2;}
+  .code-inner .label{font-size:11px; color:var(--text-muted); margin-bottom:6px;}
+  .code-inner .value{font-family:'Cairo'; font-weight:900; font-size:26px; letter-spacing:3px;}
+  .copy-btn{background:var(--accent-soft); color:var(--accent); border:1px solid rgba(18,224,196,.35); font-family:'Cairo'; font-weight:700; font-size:13px; padding:9px 22px; border-radius:12px; cursor:pointer;}
+
+  .side-col{flex:1; min-width:280px; display:flex; flex-direction:column; gap:14px;}
+  .info-card{background:var(--bg-elevated); border:1px solid var(--line); border-radius:16px; padding:16px 18px; font-size:13.5px; color:var(--text-muted); line-height:1.9;}
+  .info-card b{color:var(--text-primary);}
+  .sim-btn{background:var(--violet-soft); color:var(--violet); border:1px solid rgba(124,108,240,.35); font-family:'Cairo'; font-weight:700; font-size:13px; padding:13px; border-radius:14px; cursor:pointer;}
+
+  /* ---------- شاشة: المحادثات ---------- */
+  .chats-layout{display:flex; gap:0; background:var(--bg-panel); border:1px solid var(--line); border-radius:22px; overflow:hidden; min-height:560px;}
+  .chats-list-col{width:320px; border-left:1px solid var(--line); display:flex; flex-direction:column;}
+  .list-actions{display:flex; gap:8px; padding:16px;}
+  .action-btn{flex:1; padding:11px 6px; border-radius:12px; text-align:center; font-family:'Cairo'; font-weight:700; font-size:12.5px; border:1px solid var(--line); cursor:pointer; background:none; color:var(--text-primary);}
+  .action-btn.primary{background:var(--accent); color:#04241F; border:none;}
+  .action-btn.secondary{background:var(--violet-soft); color:var(--violet); border-color:rgba(124,108,240,.35);}
+
+  .inline-form{background:var(--bg-elevated); border:1px solid var(--line); border-radius:14px; padding:12px; margin:0 16px 14px; display:none;}
+  .inline-form.show{display:block;}
+  .inline-form input{width:100%; background:var(--bg-panel); border:1px solid var(--line); color:var(--text-primary); font-family:'Tajawal'; font-size:13px; padding:9px 12px; border-radius:10px; margin-bottom:8px;}
+  .inline-form input::placeholder{color:var(--text-muted);}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;}
+  .chip{background:var(--accent-soft); color:var(--accent); font-family:'Cairo'; font-size:11px; font-weight:700; padding:4px 8px; border-radius:8px; display:flex; align-items:center; gap:6px;}
+  .chip span{cursor:pointer;}
+  .form-actions{display:flex; gap:8px;}
+  .form-actions button{flex:1; padding:8px; border-radius:10px; font-family:'Cairo'; font-weight:700; font-size:12px; cursor:pointer;}
+  .form-actions .confirm{background:var(--accent); color:#04241F; border:none;}
+  .form-actions .cancel{background:transparent; border:1px solid var(--line); color:var(--text-muted);}
+
+  .empty-note{color:var(--text-muted); font-size:13px; text-align:center; padding:40px 20px;}
+  .chat-item{display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line); cursor:pointer;}
+  .chat-item:hover{background:var(--bg-elevated);}
+  .chat-item.selected{background:var(--accent-soft);}
+  .avatar{width:42px; height:42px; border-radius:14px; background:linear-gradient(135deg, var(--accent), var(--violet)); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:'Cairo'; font-weight:900; color:#0B1220; font-size:14px;}
+  .chat-meta{flex:1; min-width:0;}
+  .chat-meta .name{font-family:'Cairo'; font-weight:700; font-size:13.5px;}
+  .chat-meta .last{color:var(--text-muted); font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .tag{font-size:9px; padding:2px 6px; border-radius:6px; margin-left:4px; font-family:'Cairo'; font-weight:700;}
+  .tag.group{background:var(--violet-soft); color:var(--violet);}
+  .tag.pending{background:var(--danger-soft); color:var(--danger);}
+
+  .chat-detail-col{flex:1; display:flex; flex-direction:column; padding:22px 26px;}
+  .detail-header{margin-bottom:14px;}
+  .detail-header .name{font-family:'Cairo'; font-weight:900; font-size:19px;}
+  .detail-header .sub{color:var(--text-muted); font-size:12.5px; margin-top:2px;}
+
+  .approval-banner{background:var(--violet-soft); border:1px solid rgba(124,108,240,.35); border-radius:14px; padding:14px; margin-bottom:16px;}
+  .approval-banner p{font-size:13px; margin-bottom:10px; line-height:1.7;}
+  .approval-actions{display:flex; gap:8px;}
+  .approval-actions button{flex:1; padding:9px; border-radius:10px; font-family:'Cairo'; font-weight:700; font-size:12.5px; cursor:pointer;}
+  .approval-actions .accept{background:var(--accent); color:#04241F; border:none;}
+  .approval-actions .reject{background:transparent; border:1px solid var(--danger); color:var(--danger);}
+  .waiting-note{background:var(--bg-elevated); border:1px dashed var(--line); border-radius:14px; padding:16px; text-align:center; margin-bottom:16px;}
+  .waiting-note p{font-size:13px; color:var(--text-muted); margin-bottom:10px;}
+
+  .messages{flex:1; display:flex; flex-direction:column; justify-content:flex-end; gap:8px; margin-bottom:14px; overflow-y:auto;}
+  .bubble-row{display:flex;}
+  .bubble-row.me{justify-content:flex-start;}
+  .bubble-row.them{justify-content:flex-end;}
+  .bubble{max-width:65%; padding:10px 15px; border-radius:16px; font-size:13px; line-height:1.6;}
+  .bubble-row.me .bubble{background:var(--accent); color:#04241F; border-bottom-left-radius:4px;}
+  .bubble-row.them .bubble{background:var(--bg-elevated); border-bottom-right-radius:4px;}
+  .chat-input{display:flex; gap:8px; background:var(--bg-elevated); border-radius:14px; padding:6px 6px 6px 16px; align-items:center;}
+  .chat-input input{flex:1; background:transparent; border:none; color:var(--text-primary); font-family:'Tajawal'; font-size:13.5px; outline:none;}
+  .chat-input input::placeholder{color:var(--text-muted);}
+  .chat-input input:disabled{opacity:.4;}
+  .send-dot{width:36px; height:36px; border-radius:10px; background:var(--accent); color:#04241F; display:flex; align-items:center; justify-content:center; font-weight:900; font-family:'Cairo'; cursor:pointer; border:none;}
+  .send-dot:disabled{opacity:.35; cursor:not-allowed;}
+
+  /* ---------- شاشة: حول التطبيق ---------- */
+  .about-card{max-width:480px; margin:20px auto; background:var(--bg-panel); border:1px solid var(--line); border-radius:22px; padding:40px; text-align:center;}
+  .signal{width:100px; height:100px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; margin:0 auto 26px; position:relative;}
+  .signal::before, .signal::after{content:''; position:absolute; border:1.5px solid rgba(18,224,196,.4); border-radius:50%; animation:ripple 2.4s infinite;}
+  .signal::before{width:100%; height:100%;}
+  .signal::after{width:100%; height:100%; animation-delay:1.2s;}
+  @keyframes ripple{0%{transform:scale(.6); opacity:1;} 100%{transform:scale(1.9); opacity:0;}}
+  .signal .core{width:44px; height:44px; border-radius:50%; background:var(--accent); z-index:2;}
+  .about-card h2{font-family:'Cairo'; font-weight:900; font-size:19px; margin-bottom:8px;}
+  .about-card .designer{color:var(--accent); font-family:'Cairo'; font-weight:700; font-size:16px; margin-bottom:20px;}
+  .about-card .email{background:var(--bg-elevated); border:1px solid var(--line); padding:11px 20px; border-radius:12px; font-size:13.5px; color:var(--text-muted); direction:ltr; display:inline-block;}
+  .about-card .version{margin-top:22px; color:var(--text-muted); font-size:11.5px;}
+
+  .toast{position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--bg-elevated); border:1px solid var(--line); color:var(--text-primary); padding:11px 22px; border-radius:12px; font-size:13.5px; font-family:'Cairo'; font-weight:700; opacity:0; transition:.25s; pointer-events:none; z-index:50;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  @media (max-width:760px){
+    header{padding:14px 18px;} nav.tabs{padding:0 18px;} main{padding:20px 16px 40px;}
+    .chats-layout{flex-direction:column;}
+    .chats-list-col{width:100%; border-left:none; border-bottom:1px solid var(--line);}
+    .chats-layout.detail-open .chats-list-col{display:none;}
+    .chats-layout:not(.detail-open) .chat-detail-col{display:none;}
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="brand"><div class="mark"></div><h1>وصلة</h1></div>
+    <div class="status-pill online" id="statusPill" onclick="toggleOnline()"><span class="led"></span> <span id="statusText">أونلاين</span></div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" onclick="goTo('code')" data-tab="code">كودي</button>
+    <button class="tab-btn" onclick="goTo('chats')" data-tab="chats">المحادثات</button>
+    <button class="tab-btn" onclick="goTo('about')" data-tab="about">حول التطبيق</button>
+  </nav>
+
+  <main>
+
+    <!-- كودي -->
+    <section class="view active" id="view-code">
+      <div class="code-view">
+        <div class="code-card">
+          <div class="code-ring"><div class="code-inner">
+            <div class="label">الكود الخاص بيك</div>
+            <div class="value" id="myCode">------</div>
+          </div></div>
+          <button class="copy-btn" onclick="copyCode()">📋 نسخ الكود</button>
+        </div>
+        <div class="side-col">
+          <div class="info-card"><b>يعمل أونلاين وأوفلاين:</b> غيّر الحالة من فوق — لو أوفلاين، الرسائل بتتحفظ محليًا وتتزامن تلقائيًا لما النت يرجع.</div>
+          <div class="info-card"><b>إزاي تشتغل الفكرة:</b> أي حد يكتب الكود بتاعك في تبويب "المحادثات" هيبعتلك طلب بدء محادثة، ومحتاج توافق عليه الأول.</div>
+          <button class="sim-btn" onclick="simulateIncoming()">🔔 محاكاة: حد دخل بكودك دلوقتي</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- المحادثات -->
+    <section class="view" id="view-chats">
+      <div class="chats-layout" id="chatsLayout">
+        <div class="chats-list-col">
+          <div class="list-actions">
+            <button class="action-btn primary" onclick="openForm('enter')">🔑 أدخل كود</button>
+            <button class="action-btn secondary" onclick="openForm('group')">👥 أنشئ مجموعة</button>
+          </div>
+
+          <div class="inline-form" id="enterForm">
+            <input type="text" id="enterCodeInput" placeholder="اكتب الكود اللي معاك">
+            <div class="form-actions">
+              <button class="confirm" onclick="submitEnterCode()">إرسال طلب</button>
+              <button class="cancel" onclick="closeForms()">إلغاء</button>
+            </div>
+          </div>
+
+          <div class="inline-form" id="groupForm">
+            <input type="text" id="groupNameInput" placeholder="اسم المجموعة">
+            <input type="text" id="groupCodeInput" placeholder="اكتب كود واضغط إضافة">
+            <div class="chips" id="groupChips"></div>
+            <div class="form-actions">
+              <button class="cancel" onclick="addGroupCode()" style="flex:.6">+ إضافة كود</button>
+              <button class="confirm" onclick="submitGroup()">إنشاء</button>
+            </div>
+          </div>
+
+          <div id="chatList" style="flex:1; overflow-y:auto;"></div>
+        </div>
+
+        <div class="chat-detail-col" id="chatDetail">
+          <div class="empty-note">اختَر محادثة من القائمة، أو ابدأ واحدة جديدة بإدخال كود</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- حول التطبيق -->
+    <section class="view" id="view-about">
+      <div class="about-card">
+        <div class="signal"><div class="core"></div></div>
+        <h2>تم تصميم هذا التطبيق بواسطة</h2>
+        <div class="designer">محمد سعد</div>
+        <div class="email">✉️ mohamed178119@gmail.com</div>
+        <div class="version">وصلة — نموذج تفاعلي 1.0</div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  // ---------- الحالة العامة ----------
+  let myCode = genCode();
+  let online = true;
+  let chats = [];
+  let nextId = 1;
+  let groupDraftCodes = [];
+  let activeChatId = null;
+
+  function genCode(){
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const p = (n) => Array.from({length:n}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+    return p(3) + '-' + p(2) + p(1);
+  }
+
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  // ---------- التنقل بين التبويبات ----------
+  function goTo(tab){
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + tab).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    if(tab === 'chats') renderChatList();
+  }
+
+  // ---------- كودي ----------
+  document.getElementById('myCode').textContent = myCode;
+
+  function toggleOnline(){
+    online = !online;
+    document.getElementById('statusText').textContent = online ? 'أونلاين' : 'أوفلاين';
+    document.getElementById('statusPill').classList.toggle('online', online);
+    document.getElementById('statusPill').classList.toggle('offline', !online);
+    toast(online ? 'رجعت أونلاين — بيتزامن دلوقتي' : 'وضع أوفلاين — الرسائل هتتحفظ محليًا');
+  }
+
+  function copyCode(){
+    navigator.clipboard?.writeText(myCode).catch(()=>{});
+    toast('تم نسخ الكود ' + myCode);
+  }
+
+  function simulateIncoming(){
+    const fakeCode = genCode();
+    chats.push({id:nextId, name:'كود ' + fakeCode, type:'direct', status:'pending_incoming', messages:[]});
+    activeChatId = nextId;
+    nextId++;
+    toast('في طلب جديد — افتح تبويب المحادثات');
+    goTo('chats');
+    selectChat(activeChatId);
+  }
+
+  // ---------- فورمات المحادثات ----------
+  function openForm(which){
+    closeForms();
+    document.getElementById(which === 'enter' ? 'enterForm' : 'groupForm').classList.add('show');
+  }
+  function closeForms(){
+    document.getElementById('enterForm').classList.remove('show');
+    document.getElementById('groupForm').classList.remove('show');
+    groupDraftCodes = [];
+    renderChips();
+  }
+
+  function submitEnterCode(){
+    const val = document.getElementById('enterCodeInput').value.trim();
+    if(!val){ toast('اكتب كود الأول'); return; }
+    chats.push({id:nextId, name:'كود ' + val, type:'direct', status:'pending_outgoing', messages:[]});
+    const id = nextId;
+    nextId++;
+    document.getElementById('enterCodeInput').value = '';
+    closeForms();
+    toast('اتبعت طلب المحادثة، في انتظار الموافقة');
+    renderChatList();
+    selectChat(id);
+  }
+
+  function addGroupCode(){
+    const val = document.getElementById('groupCodeInput').value.trim();
+    if(!val){ return; }
+    groupDraftCodes.push(val);
+    document.getElementById('groupCodeInput').value = '';
+    renderChips();
+  }
+  function removeGroupCode(i){
+    groupDraftCodes.splice(i,1);
+    renderChips();
+  }
+  function renderChips(){
+    document.getElementById('groupChips').innerHTML = groupDraftCodes.map((c,i) =>
+      `<div class="chip">${c} <span onclick="removeGroupCode(${i})">✕</span></div>`
+    ).join('');
+  }
+  function submitGroup(){
+    const name = document.getElementById('groupNameInput').value.trim();
+    if(!name){ toast('اكتب اسم للمجموعة'); return; }
+    if(groupDraftCodes.length < 2){ toast('ضيف كودين على الأقل للمجموعة'); return; }
+    chats.push({id:nextId, name, type:'group', status:'active', members:[...groupDraftCodes], messages:[]});
+    const id = nextId;
+    nextId++;
+    document.getElementById('groupNameInput').value = '';
+    closeForms();
+    toast('اتعملت المجموعة "' + name + '"');
+    renderChatList();
+    selectChat(id);
+  }
+
+  // ---------- عرض قائمة الدردشات ----------
+  function renderChatList(){
+    const list = document.getElementById('chatList');
+    if(chats.length === 0){
+      list.innerHTML = '<div class="empty-note">لسه مفيش محادثات — ادخل كود أو اعمل مجموعة عشان تبدأ</div>';
+      return;
+    }
+    list.innerHTML = chats.map(c => {
+      const initial = c.name.trim().slice(0,2);
+      const last = c.messages.length ? c.messages[c.messages.length-1].text : (
+        c.status === 'pending_incoming' ? 'في انتظار موافقتك على بدء المحادثة' :
+        c.status === 'pending_outgoing' ? 'في انتظار موافقة الطرف الآخر' :
+        c.type === 'group' ? 'تم إنشاء المجموعة' : '...'
+      );
+      const tag = c.type === 'group' ? '<span class="tag group">مجموعة</span>' :
+                  c.status.startsWith('pending') ? '<span class="tag pending">معلّق</span>' : '';
+      const selected = c.id === activeChatId ? 'selected' : '';
+      return `<div class="chat-item ${selected}" onclick="selectChat(${c.id})">
+        <div class="avatar">${initial}</div>
+        <div class="chat-meta">
+          <div class="name">${tag}${c.name}</div>
+          <div class="last">${last}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function getChat(id){ return chats.find(c => c.id === id); }
+
+  function selectChat(id){
+    activeChatId = id;
+    document.getElementById('chatsLayout').classList.add('detail-open');
+    renderChatList();
+    renderChatDetail();
+  }
+
+  function backToList(){
+    document.getElementById('chatsLayout').classList.remove('detail-open');
+  }
+
+  function renderChatDetail(){
+    const box = document.getElementById('chatDetail');
+    const chat = getChat(activeChatId);
+    if(!chat){ box.innerHTML = '<div class="empty-note">اختَر محادثة من القائمة، أو ابدأ واحدة جديدة بإدخال كود</div>'; return; }
+
+    let html = `<div class="detail-header">
+        <div class="name">${chat.name}</div>
+        <div class="sub">${chat.type === 'group' ? 'مجموعة من ' + chat.members.length + ' أكواد' : 'دردشة فردية'}</div>
+      </div>`;
+
+    if(chat.status === 'pending_incoming'){
+      html += `<div class="approval-banner">
+        <p>👋 مستخدم جديد دخل بكودك وعايز يبدأ محادثة معاك. توافق؟</p>
+        <div class="approval-actions">
+          <button class="accept" onclick="acceptChat(${chat.id})">قبول</button>
+          <button class="reject" onclick="rejectChat(${chat.id})">رفض</button>
+        </div>
+      </div>`;
+    } else if(chat.status === 'pending_outgoing'){
+      html += `<div class="waiting-note">
+        <p>⏳ اتبعت طلبك، في انتظار موافقة الطرف الآخر...</p>
+        <button class="sim-btn" onclick="simulateApproval(${chat.id})">محاكاة: الطرف الآخر وافق</button>
+      </div>`;
+    }
+
+    html += `<div class="messages" id="msgBox"></div>
+      <div class="chat-input">
+        <input id="msgInput" placeholder="اكتب رسالة..." ${chat.status !== 'active' ? 'disabled' : ''} onkeydown="if(event.key==='Enter') sendMessage(${chat.id})">
+        <button class="send-dot" ${chat.status !== 'active' ? 'disabled' : ''} onclick="sendMessage(${chat.id})">➤</button>
+      </div>`;
+
+    box.innerHTML = html;
+    const msgBox = document.getElementById('msgBox');
+    msgBox.innerHTML = chat.messages.length ? chat.messages.map(m =>
+      `<div class="bubble-row ${m.from}"><div class="bubble">${m.text}</div></div>`
+    ).join('') : '<div class="empty-note">لسه مفيش رسائل — ابدأ الكلام</div>';
+  }
+
+  function acceptChat(id){
+    const chat = getChat(id);
+    chat.status = 'active';
+    toast('تم قبول المحادثة');
+    renderChatList();
+    renderChatDetail();
+  }
+  function rejectChat(id){
+    chats = chats.filter(c => c.id !== id);
+    activeChatId = null;
+    toast('تم رفض الطلب');
+    renderChatList();
+    backToList();
+    renderChatDetail();
+  }
+  function simulateApproval(id){
+    const chat = getChat(id);
+    chat.status = 'active';
+    toast('الطرف الآخر وافق على المحادثة');
+    renderChatList();
+    renderChatDetail();
+  }
+  function sendMessage(id){
+    const input = document.getElementById('msgInput');
+    const val = input.value.trim();
+    if(!val) return;
+    const chat = getChat(id);
+    chat.messages.push({from:'me', text: val});
+    input.value = '';
+    renderChatList();
+    renderChatDetail();
+    document.getElementById('msgInput').focus();
+  }
+
+  renderChatList();
+</script>
+
+</body>
+</html>
